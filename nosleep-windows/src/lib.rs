@@ -148,9 +148,16 @@ impl NoSleep {
         Ok(())
     }
 
-    pub fn stop(&self) -> Result<()> {
+    pub fn stop(&mut self) -> Result<()> {
         if let Some(handle) = &self.no_sleep_handle {
-            return handle.stop();
+            let res = match handle.stop() {
+                Ok(_) => {
+                    self.no_sleep_handle = None;
+                    Ok(())
+                }
+                Err(e) => Err(e),
+            };
+            return res;
         }
         Ok(())
     }
@@ -171,6 +178,22 @@ mod tests {
     #[test]
     fn test_stop() {
         let mut nosleep = NoSleep::new().unwrap();
+        nosleep
+            .start(NoSleepType::PreventUserIdleDisplaySleep)
+            .unwrap();
+        nosleep.stop().unwrap();
+    }
+
+    #[test]
+    fn test_multiple() {
+        let mut nosleep = NoSleep::new().unwrap();
+        nosleep
+            .start(NoSleepType::PreventUserIdleDisplaySleep)
+            .unwrap();
+        nosleep.stop().unwrap();
+        nosleep
+            .start(NoSleepType::PreventUserIdleDisplaySleep)
+            .unwrap();
         nosleep
             .start(NoSleepType::PreventUserIdleDisplaySleep)
             .unwrap();
